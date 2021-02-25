@@ -1,0 +1,13 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Installing dependencies
+      - apt-get update -y
+      - apt-get install -y cowsay
+  build:
+    runtime-versions:
+      python: latest
+    commands:
+      - python --version | cowsay
