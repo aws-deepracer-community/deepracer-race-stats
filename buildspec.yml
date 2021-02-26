@@ -11,4 +11,5 @@ phases:
       - apt-get install -y cowsay
   build:
     commands:
-      - python3 --version | cowsay
+      - python3 --version
+      - which cowsay
