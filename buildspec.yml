@@ -8,8 +8,9 @@ phases:
       - echo Installing dependencies
       - curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
       - apt-get update -y
-      - apt-get install -y cowsay
+      - apt-get install -y fortune
   build:
     commands:
       - python3 --version
-      - which cowsay
+      - python --version
+      - fortune
