@@ -2,6 +2,7 @@ import os
 import click
 import requests
 from datetime import datetime
+from joblib import Parallel, delayed
 
 from deepracer_race_stats.constants import (
     RAW_DATA_ASSETS_LEADERBOARDS_FOLDER,
@@ -17,6 +18,7 @@ from deepracer_race_stats.util.deepracer_service import (
     list_leaderboards,
     list_tracks,
 )
+from deepracer_race_stats.util.media import fetch_media_assets
 
 
 @click.group()
@@ -41,27 +43,13 @@ def track_update(ctx):
 
     boto_response_to_csv(response, output_path)
 
-    # Specific for tracks, we also collect the assets.
-    for r in response:
-        try:
-            track_name = r["TrackName"]
-            track_picture_url = r["TrackPicture"]
-
-            _, output_ext = os.path.splitext(track_picture_url)
-            output_path = os.path.join(RAW_DATA_ASSETS_TRACK_FOLDER, "{}{}".format(track_name, output_ext))
-
-            r = requests.get(track_picture_url)
-            if r.status_code == 200:
-                with open(output_path, "wb") as f:
-                    f.write(r.content)
-        except Exception:
-            # Assume we can't get it then.
-            pass
+    asset_map = {r["TrackArn"]: r["TrackPicture"] for r in response}
+    fetch_media_assets(asset_map, RAW_DATA_ASSETS_TRACK_FOLDER)
 
 
 @cli.command()
 @click.pass_context
-def leaderboards_update(ctx):
+def leaderboard_update(ctx):
     """Updates the available data on race tracks.
 
     Args:
@@ -73,37 +61,20 @@ def leaderboards_update(ctx):
 
     boto_response_to_csv(response, output_path)
 
-    # Specific for leaderboards, we also collect the assets.
-    for r in response:
-        try:
-            leaderboard_name = r["Name"]
-            leaderboard_image_url = r["ImageUrl"]
-
-            _, output_ext = os.path.splitext(leaderboard_image_url)
-            output_path = os.path.join(RAW_DATA_ASSETS_LEADERBOARDS_FOLDER, "{}{}".format(leaderboard_name, output_ext))
-
-            r = requests.get(leaderboard_image_url)
-            if r.status_code == 200:
-                with open(output_path, "wb") as f:
-                    f.write(r.content)
-        except Exception as e:
-            # Assume we can't get it then.
-            pass
+    asset_map = {r["Arn"]: r["ImageUrl"] for r in response if "ImageUrl" in r}
+    fetch_media_assets(asset_map, RAW_DATA_ASSETS_LEADERBOARDS_FOLDER)
 
     # Now do an update for each unique ARN:
     # - If OPEN: We collect a snapshot and save it under the current data and time.
     # - If CLOSED: We assume it is final and store it as FINAL.csv -> Any update to this will be version controlled.
-    for r in response:
-        leaderboard_arn = r["Arn"]
 
+    def update(leaderboard_arn, status):
         output_folder = os.path.join(RAW_DATA_LEADERBOARD_FOLDER, leaderboard_arn)
 
         if not os.path.exists(output_folder):
             os.makedirs(output_folder, exist_ok=True)
 
-        is_open = r["Status"] == "OPEN"
-
-        if is_open:
+        if status == "OPEN":
             now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
             # Output filename of the nearest hour (2021-01-01 01:00:00.csv)
             output_file = os.path.join(output_folder, "{}.csv".format(now.isoformat()))
@@ -114,6 +85,8 @@ def leaderboards_update(ctx):
 
         # Video S3 column is too large and will not work anyways so we drop it.
         boto_response_to_csv(response, output_file, drop_columns=["SubmissionVideoS3path"])
+
+    Parallel(n_jobs=-1, prefer="threads")(delayed(update)(r["Arn"], r["Status"]) for r in response)
 
 
 @cli.command()

@@ -10,6 +10,7 @@ click = "^7.1.2"
 boto3 = "^1.17.17"
 pandas = "^1.2.2"
 requests = "^2.25.1"
+joblib = "^1.0.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
