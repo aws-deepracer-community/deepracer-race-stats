@@ -87,7 +87,7 @@ def leaderboard_update(ctx):
         # Video S3 column is too large and will not work anyways so we drop it.
         boto_response_to_csv(response, output_file, drop_columns=["SubmissionVideoS3path"])
 
-    Parallel(n_jobs=-1, prefer="threads")(delayed(update)(r["Arn"], r["Status"]) for r in response)
+    Parallel(n_jobs=2, prefer="threads")(delayed(update)(r["Arn"], r["Status"]) for r in response)
 
 
 @cli.command()
