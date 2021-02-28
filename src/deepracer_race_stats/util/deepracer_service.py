@@ -1,8 +1,8 @@
-from deepracer_race_stats.util.boto3_util import get_boto_deepracer_client
+from deepracer.boto3_enhancer import deepracer_client
 
 
 def list_leaderboards(sortKey="CloseTime", reverseSort=False, limit=None):
-    client = get_boto_deepracer_client()
+    client = deepracer_client()
 
     entries = []
     response = client.list_leaderboards(MaxResults=100)
@@ -26,7 +26,7 @@ def list_leaderboards(sortKey="CloseTime", reverseSort=False, limit=None):
 
 
 def list_tracks(sortKey=None, reverseSort=False, limit=None):
-    client = get_boto_deepracer_client()
+    client = deepracer_client()
 
     entries = []
     response = client.list_tracks(MaxResults=100)
@@ -50,7 +50,7 @@ def list_tracks(sortKey=None, reverseSort=False, limit=None):
 
 
 def list_leaderboard(leaderboard_arn, sortKey="Rank", reverseSort=False, limit=None):
-    client = get_boto_deepracer_client()
+    client = deepracer_client()
 
     entries = []
     response = client.list_leaderboard_submissions(LeaderboardArn=leaderboard_arn, MaxResults=100)
