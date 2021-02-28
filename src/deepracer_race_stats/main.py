@@ -1,11 +1,13 @@
 import os
 import click
 import requests
+from datetime import datetime
 
 from deepracer_race_stats.constants import (
     RAW_DATA_ASSETS_LEADERBOARDS_FOLDER,
     RAW_DATA_ASSETS_TRACK_FOLDER,
     RAW_DATA_LEADERBOARDS_FOLDER,
+    RAW_DATA_LEADERBOARD_FOLDER,
     RAW_DATA_TRACK_FOLDER,
 )
 
@@ -77,8 +79,6 @@ def leaderboards_update(ctx):
             leaderboard_name = r["Name"]
             leaderboard_image_url = r["ImageUrl"]
 
-            print(leaderboard_image_url)
-
             _, output_ext = os.path.splitext(leaderboard_image_url)
             output_path = os.path.join(RAW_DATA_ASSETS_LEADERBOARDS_FOLDER, "{}{}".format(leaderboard_name, output_ext))
 
@@ -89,6 +89,31 @@ def leaderboards_update(ctx):
         except Exception as e:
             # Assume we can't get it then.
             pass
+
+    # Now do an update for each unique ARN:
+    # - If OPEN: We collect a snapshot and save it under the current data and time.
+    # - If CLOSED: We assume it is final and store it as FINAL.csv -> Any update to this will be version controlled.
+    for r in response:
+        leaderboard_arn = r["Arn"]
+
+        output_folder = os.path.join(RAW_DATA_LEADERBOARD_FOLDER, leaderboard_arn)
+
+        if not os.path.exists(output_folder):
+            os.makedirs(output_folder, exist_ok=True)
+
+        is_open = r["Status"] == "OPEN"
+
+        if is_open:
+            now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+            # Output filename of the nearest hour (2021-01-01 01:00:00.csv)
+            output_file = os.path.join(output_folder, "{}.csv".format(now.isoformat()))
+            response = list_leaderboard(leaderboard_arn)
+        else:
+            output_file = os.path.join(output_folder, "FINAL.csv")
+            response = list_leaderboard(leaderboard_arn)
+
+        # Video S3 column is too large and will not work anyways so we drop it.
+        boto_response_to_csv(response, output_file, drop_columns=["SubmissionVideoS3path"])
 
 
 @cli.command()
