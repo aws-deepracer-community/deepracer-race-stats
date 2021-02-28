@@ -1,12 +1,13 @@
 import os
 import click
-import requests
+import tarfile
 from datetime import datetime
 from joblib import Parallel, delayed
 
 from deepracer_race_stats.constants import (
     RAW_DATA_ASSETS_LEADERBOARDS_FOLDER,
     RAW_DATA_ASSETS_TRACK_FOLDER,
+    RAW_DATA_FOLDER,
     RAW_DATA_LEADERBOARDS_FOLDER,
     RAW_DATA_LEADERBOARD_FOLDER,
     RAW_DATA_TRACK_FOLDER,
@@ -90,9 +91,8 @@ def leaderboard_update(ctx):
 
 
 @cli.command()
-@click.option("-l", "--leaderboard-arn", required=True)
+@click.option("-o", "output_filename", required=False, default="raw_data.tar.gz")
 @click.pass_context
-def test_leaderboard(ctx, leaderboard_arn):
-    response = list_leaderboard(leaderboard_arn)
-
-    boto_response_to_csv(response, "leaderboard.csv", drop_columns=["SubmissionVideoS3path"])
+def archive(ctx, output_filename):
+    with tarfile.open(output_filename, "w:gz") as tar:
+        tar.add(RAW_DATA_FOLDER, arcname=os.path.basename(RAW_DATA_FOLDER))

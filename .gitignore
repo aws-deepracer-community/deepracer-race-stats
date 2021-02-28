@@ -130,5 +130,4 @@ dmypy.json
 
 .vscode
 
-# TODO: Remove once we're done with the scripts.
-*.csv
+*.tar.gz
