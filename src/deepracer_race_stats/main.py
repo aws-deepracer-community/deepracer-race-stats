@@ -4,10 +4,10 @@ import click
 from datetime import datetime
 from joblib import Parallel, delayed
 from deepracer_race_stats.constants import (
-    LEADERBOARDS_FOLDER,
+    LEADERBOARDS_CSV_FILEPATH,
     LEADERBOARDS_FOLDER_ASSETS,
     LEADERBOARD_FOLDER,
-    TRACK_FOLDER,
+    TRACK_CSV_FILEPATH,
     TRACK_FOLDER_ASSETS,
 )
 
@@ -39,20 +39,13 @@ def track_update(ctx, output_folder):
     """
 
     response = list_tracks()
-    output_track_folder = os.path.join(output_folder, TRACK_FOLDER)
+    output_path = os.path.join(output_folder, TRACK_CSV_FILEPATH)
 
-    if not os.path.exists(output_track_folder):
-        os.makedirs(output_track_folder, exist_ok=True)
-
-    output_path = os.path.join(output_track_folder, "tracks.csv")
     boto_response_to_csv(response, output_path)
 
     asset_map = {r["TrackArn"]: r["TrackPicture"] for r in response}
 
     output_assets_folder = os.path.join(output_folder, TRACK_FOLDER_ASSETS)
-
-    if not os.path.exists(output_assets_folder):
-        os.makedirs(output_assets_folder, exist_ok=True)
 
     fetch_media_assets(asset_map, output_assets_folder)
 
@@ -68,19 +61,12 @@ def leaderboard_update(ctx, output_folder):
     """
 
     response = list_leaderboards()
-    output_leaderboards_folder = os.path.join(output_folder, LEADERBOARDS_FOLDER, "leaderboards.csv")
-    if not os.path.exists(output_leaderboards_folder):
-        os.makedirs(output_leaderboards_folder, exist_ok=True)
+    output_path = os.path.join(output_folder, LEADERBOARDS_CSV_FILEPATH)
 
-    output_path = os.path.join(output_leaderboards_folder, "leaderboards.csv")
     boto_response_to_csv(response, output_path)
 
     asset_map = {r["Arn"]: r["ImageUrl"] for r in response if "ImageUrl" in r}
-
     output_assets_folder = os.path.join(output_folder, LEADERBOARDS_FOLDER_ASSETS)
-
-    if not os.path.exists(output_assets_folder):
-        os.makedirs(output_assets_folder, exist_ok=True)
 
     fetch_media_assets(asset_map, output_assets_folder)
 
