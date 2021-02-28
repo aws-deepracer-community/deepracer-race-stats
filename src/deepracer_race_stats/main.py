@@ -39,14 +39,22 @@ def track_update(ctx, output_folder):
     """
 
     response = list_tracks()
-    output_path = os.path.join(output_folder, TRACK_FOLDER, "tracks.csv")
+    output_track_folder = os.path.join(output_folder, TRACK_FOLDER)
 
+    if not os.path.exists(output_track_folder):
+        os.makedirs(output_track_folder, exist_ok=True)
+
+    output_path = os.path.join(output_track_folder, "tracks.csv")
     boto_response_to_csv(response, output_path)
 
     asset_map = {r["TrackArn"]: r["TrackPicture"] for r in response}
 
-    output_assets = os.path.join(output_folder, TRACK_FOLDER_ASSETS)
-    fetch_media_assets(asset_map, output_assets)
+    output_assets_folder = os.path.join(output_folder, TRACK_FOLDER_ASSETS)
+
+    if not os.path.exists(output_assets_folder):
+        os.makedirs(output_assets_folder, exist_ok=True)
+
+    fetch_media_assets(asset_map, output_assets_folder)
 
 
 @cli.command()
@@ -60,14 +68,21 @@ def leaderboard_update(ctx, output_folder):
     """
 
     response = list_leaderboards()
-    output_path = os.path.join(output_folder, LEADERBOARDS_FOLDER, "leaderboards.csv")
+    output_leaderboards_folder = os.path.join(output_folder, LEADERBOARDS_FOLDER, "leaderboards.csv")
+    if not os.path.exists(output_leaderboards_folder):
+        os.makedirs(output_leaderboards_folder, exist_ok=True)
 
+    output_path = os.path.join(output_leaderboards_folder, "leaderboards.csv")
     boto_response_to_csv(response, output_path)
 
     asset_map = {r["Arn"]: r["ImageUrl"] for r in response if "ImageUrl" in r}
 
-    output_assets = os.path.join(output_folder, LEADERBOARDS_FOLDER_ASSETS)
-    fetch_media_assets(asset_map, output_assets)
+    output_assets_folder = os.path.join(output_folder, LEADERBOARDS_FOLDER_ASSETS)
+
+    if not os.path.exists(output_assets_folder):
+        os.makedirs(output_assets_folder, exist_ok=True)
+
+    fetch_media_assets(asset_map, output_assets_folder)
 
     # Now do an update for each unique ARN:
     # - If OPEN: We collect a snapshot and save it under the current data and time.
