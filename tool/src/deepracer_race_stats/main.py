@@ -1,6 +1,6 @@
 import click
 
-from deepracer_race_stats.util.boto3_util import get_boto_deepracer_client
+from deepracer_race_stats.util.deepracer_service import list_leaderboards
 
 
 @click.group()
@@ -14,8 +14,4 @@ def cli(ctx):
 @cli.command()
 @click.pass_context
 def test(ctx):
-    client = get_boto_deepracer_client()
-
-    response = client.list_leaderboards(MaxResults=100)
-
-    print(response)
+    print(list_leaderboards())
