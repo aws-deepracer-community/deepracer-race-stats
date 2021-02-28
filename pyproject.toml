@@ -8,6 +8,7 @@ authors = ["AWS DeepRacer Community"]
 python = "^3.8"
 click = "^7.1.2"
 boto3 = "^1.17.17"
+pandas = "^1.2.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -20,3 +21,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 drs = "deepracer_race_stats.main:cli"
+
+[tool.black]
+line-length=120
+
+[tool.flake8]
+line-length=120
