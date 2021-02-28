@@ -10,7 +10,6 @@ def cli(ctx):
 
     # Set context flags here (like env vars?)
 
-
 @cli.command()
 @click.pass_context
 def test(ctx):
