@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "deepracer-race-stats"
+version = "0.1.0"
+description = "A CLI tool to extract data from the AWS DeepRacer service API."
+authors = ["AWS DeepRacer Community"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+click = "^7.1.2"
+boto3 = "^1.17.17"
+pandas = "^1.2.2"
+requests = "^2.25.1"
+joblib = "^1.0.1"
+deepracer-utils = "^0.19"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+black = "^20.8b1"
+flake8 = "^3.8.4"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+drs = "deepracer_race_stats.main:cli"
+
+[tool.black]
+line-length=120
+
+[tool.flake8]
+line-length=120
