@@ -85,9 +85,11 @@ def leaderboard_update(ctx, output_folder):
             # Output filename of the nearest hour (2021-01-01 01:00:00.csv)
             output_file = os.path.join(leaderboard_output_folder, "{}.csv".format(now.isoformat()))
             response = list_leaderboard(leaderboard_arn)
-        else:
+        elif status == "CLOSED":
             output_file = os.path.join(leaderboard_output_folder, "FINAL.csv")
             response = list_leaderboard(leaderboard_arn)
+        else:
+            return
 
         # Video S3 column is too large and will not work anyways so we drop it.
         boto_response_to_csv(response, output_file, drop_columns=["SubmissionVideoS3path"])
