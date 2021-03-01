@@ -6,7 +6,7 @@ from joblib import Parallel, delayed
 from deepracer_race_stats.constants import (
     LEADERBOARDS_CSV_FILEPATH,
     LEADERBOARDS_FOLDER_ASSETS,
-    LEADERBOARD_FOLDER,
+    LEADERBOARDS_FOLDER,
     TRACK_CSV_FILEPATH,
     TRACK_FOLDER_ASSETS,
 )
@@ -75,7 +75,7 @@ def leaderboard_update(ctx, output_folder):
     # - If CLOSED: We assume it is final and store it as FINAL.csv -> Any update to this will be version controlled.
 
     def update(leaderboard_arn, status):
-        leaderboard_output_folder = os.path.join(output_folder, LEADERBOARD_FOLDER, leaderboard_arn)
+        leaderboard_output_folder = os.path.join(output_folder, LEADERBOARDS_FOLDER, leaderboard_arn)
 
         if not os.path.exists(leaderboard_output_folder):
             os.makedirs(leaderboard_output_folder, exist_ok=True)
