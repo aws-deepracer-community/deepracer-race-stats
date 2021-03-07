@@ -139,7 +139,7 @@ def leaderboard_update(ctx, output_folder):
         if status == "OPEN":
             now = datetime.utcnow().replace(minute=0, second=0, microsecond=0)
             # Output filename of the nearest hour (2021-01-01 01:00:00.csv)
-            output_file = os.path.join(leaderboard_output_folder, "{}.csv".format(now.isoformat()))
+            output_file = os.path.join(leaderboard_output_folder, "{}.csv".format(now.strftime("%Y-%m-%dT%H:%M:%SZ")))
             response = list_leaderboard(leaderboard_arn)
         elif status == "CLOSED":
             output_file = os.path.join(leaderboard_output_folder, "FINAL.csv")
