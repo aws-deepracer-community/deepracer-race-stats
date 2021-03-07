@@ -23,7 +23,7 @@ from deepracer_race_stats.util.deepracer_service import (
     list_leaderboards,
     list_tracks,
 )
-from deepracer_race_stats.util.media import fetch_media_assets
+from deepracer_race_stats.util.assets import fetch_assets, extract_asset_paths
 
 
 @click.group()
@@ -49,11 +49,13 @@ def track_update(ctx, output_folder):
 
     boto_response_to_csv(response, output_path)
 
-    asset_map = {r["TrackArn"]: r["TrackPicture"] for r in response}
+    asset_map = {}
+
+    for r in response:
+        asset_map.update(extract_asset_paths(r))
 
     output_assets_folder = os.path.join(output_folder, TRACK_FOLDER_ASSETS)
-
-    fetch_media_assets(asset_map, output_assets_folder)
+    fetch_assets(asset_map, output_assets_folder)
 
 
 @cli.command()
@@ -120,7 +122,7 @@ def leaderboard_update(ctx, output_folder):
     asset_map = {r["Arn"]: r["ImageUrl"] for r in response if "ImageUrl" in r}
     output_assets_folder = os.path.join(output_folder, LEADERBOARDS_FOLDER_ASSETS)
 
-    fetch_media_assets(asset_map, output_assets_folder)
+    fetch_assets(asset_map, output_assets_folder)
 
     # Now do an update for each unique ARN:
     # - If OPEN: We collect a snapshot and save it under the current data and time.

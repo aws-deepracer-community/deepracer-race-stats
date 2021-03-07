@@ -1,9 +1,10 @@
 import os
 import requests
 from joblib import Parallel, delayed
+from urllib.parse import urlparse
 
 
-def fetch_media_assets(key_url_map, output_folder):
+def fetch_assets(key_url_map, output_folder):
     # Specific for tracks, we also collect the assets.
     def download(key, url):
         try:
@@ -24,3 +25,21 @@ def fetch_media_assets(key_url_map, output_folder):
             pass
 
     return Parallel(n_jobs=-1, prefer="threads")(delayed(download)(key, url) for key, url in key_url_map.items())
+
+
+def get_asset_path(arn, url):
+    return os.path.join(arn, urlparse(url).path.lstrip("/"))
+
+
+def extract_asset_paths(r):
+    arn = r["TrackArn"]
+    response_asset_map = {}
+
+    if "TrackPicture" in r:
+        response_asset_map[get_asset_path(arn, r["TrackPicture"])] = r["TrackPicture"]
+
+    if "TrackRaceTypePictureMap" in r:
+        for key, value in r["TrackRaceTypePictureMap"].items():
+            response_asset_map[get_asset_path(arn, key)] = value
+
+    return response_asset_map
