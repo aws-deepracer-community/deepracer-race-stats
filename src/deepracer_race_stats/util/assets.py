@@ -8,8 +8,7 @@ def fetch_assets(key_url_map, output_folder):
     # Specific for tracks, we also collect the assets.
     def download(key, url):
         try:
-            _, output_ext = os.path.splitext(url)
-            output_path = os.path.join(output_folder, "{}{}".format(key, output_ext))
+            output_path = os.path.join(output_folder, key)
             output_dir = os.path.dirname(output_path)
 
             if not os.path.exists(output_dir):
@@ -31,15 +30,18 @@ def get_asset_path(arn, url):
     return os.path.join(arn, urlparse(url).path.lstrip("/"))
 
 
-def extract_asset_paths(r):
-    arn = r["TrackArn"]
+def extract_asset_paths(r, arn_key="Arn"):
+    arn = r[arn_key]
     response_asset_map = {}
 
-    if "TrackPicture" in r:
-        response_asset_map[get_asset_path(arn, r["TrackPicture"])] = r["TrackPicture"]
+    columns = ["ImageUrl", "LeaderboardImage", "TrackPicture"]
+
+    for c in columns:
+        if c in r:
+            response_asset_map[get_asset_path(arn, r[c])] = r[c]
 
     if "TrackRaceTypePictureMap" in r:
         for key, value in r["TrackRaceTypePictureMap"].items():
-            response_asset_map[get_asset_path(arn, key)] = value
+            response_asset_map[get_asset_path(arn, r["TrackRaceTypePictureMap"][key])] = value
 
     return response_asset_map

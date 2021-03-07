@@ -52,7 +52,7 @@ def track_update(ctx, output_folder):
     asset_map = {}
 
     for r in response:
-        asset_map.update(extract_asset_paths(r))
+        asset_map.update(extract_asset_paths(r, arn_key="TrackArn"))
 
     output_assets_folder = os.path.join(output_folder, TRACK_FOLDER_ASSETS)
     fetch_assets(asset_map, output_assets_folder)
@@ -119,9 +119,11 @@ def leaderboard_update(ctx, output_folder):
 
     boto_response_to_csv(response, output_path)
 
-    asset_map = {r["Arn"]: r["ImageUrl"] for r in response if "ImageUrl" in r}
-    output_assets_folder = os.path.join(output_folder, LEADERBOARDS_FOLDER_ASSETS)
+    asset_map = {}
+    for r in response:
+        asset_map.update(extract_asset_paths(r))
 
+    output_assets_folder = os.path.join(output_folder, LEADERBOARDS_FOLDER_ASSETS)
     fetch_assets(asset_map, output_assets_folder)
 
     # Now do an update for each unique ARN:
