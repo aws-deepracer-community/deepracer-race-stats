@@ -1,5 +1,9 @@
 import os
 import click
+import boto3
+import glob
+import shutil
+import tarfile
 
 from datetime import datetime
 from joblib import Parallel, delayed
@@ -7,8 +11,10 @@ from deepracer_race_stats.constants import (
     LEADERBOARDS_CSV_FILEPATH,
     LEADERBOARDS_FOLDER_ASSETS,
     LEADERBOARDS_FOLDER,
+    SIMAPP_TAR_GZ,
     TRACK_CSV_FILEPATH,
     TRACK_FOLDER_ASSETS,
+    TRACK_FOLDER_ROUTES,
 )
 
 from deepracer_race_stats.util.csv_util import boto_response_to_csv
@@ -48,6 +54,52 @@ def track_update(ctx, output_folder):
     output_assets_folder = os.path.join(output_folder, TRACK_FOLDER_ASSETS)
 
     fetch_media_assets(asset_map, output_assets_folder)
+
+
+@cli.command()
+@click.option("-o", "--output-folder", required=True)
+@click.option("-b", "--simapp-bucket", default="deepracer-managed-resources-us-east-1")
+@click.option("-k", "--simapp-key", default=SIMAPP_TAR_GZ)
+@click.pass_context
+def simapp_update(ctx, output_folder, simapp_bucket, simapp_key):
+    # Download simapp bundle.
+    tmp_folder = "simapp_tmp"
+    route_prefix = "opt/install/deepracer_simulation_environment/share/deepracer_simulation_environment/routes"
+
+    if not os.path.exists(tmp_folder):
+        os.makedirs(tmp_folder)
+
+    s3 = boto3.resource("s3")
+    s3.Bucket(simapp_bucket).download_file(Key=simapp_key, Filename=os.path.join("simapp_tmp", SIMAPP_TAR_GZ))
+
+    # Specify subfolders to extract.
+    def subfolders(tf):
+        for m in tf.getmembers():
+            # Routes folder with the track numpy files.
+
+            if m.path.startswith(route_prefix):
+                yield m
+
+    with tarfile.open(os.path.join(tmp_folder, SIMAPP_TAR_GZ)) as f:
+        f.extractall(path=tmp_folder)
+
+    # Extract specific parts of the simapp we want to store.
+    with tarfile.open(os.path.join(tmp_folder, "bundle.tar"), mode="r") as f:
+        f.extractall(path=tmp_folder, members=subfolders(f))
+
+    # Move the files we want to the raw_data folder.
+    output_track_folder = os.path.join(output_folder, TRACK_FOLDER_ROUTES)
+
+    if not os.path.exists(output_track_folder):
+        os.makedirs(output_track_folder)
+
+    for route in glob.glob(os.path.join(tmp_folder, route_prefix, "*.npy")):
+        output_path = os.path.join(output_track_folder, os.path.basename(route))
+
+        shutil.copy(route, output_path)
+
+    # Remove temporary folder
+    shutil.rmtree(tmp_folder)
 
 
 @cli.command()
