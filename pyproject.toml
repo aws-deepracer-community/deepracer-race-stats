@@ -11,7 +11,7 @@ boto3 = "^1.17.17"
 pandas = "^1.2.2"
 requests = "^2.25.1"
 joblib = "^1.0.1"
-deepracer-utils = "^0.19"
+deepracer-utils = "^0.20"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"

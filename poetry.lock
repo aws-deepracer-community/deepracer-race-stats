@@ -121,7 +121,7 @@ six = "*"
 
 [[package]]
 name = "deepracer-utils"
-version = "0.19"
+version = "0.20"
 description = "A set of tools for working with DeepRacer training"
 category = "main"
 optional = false
@@ -507,7 +507,7 @@ python-versions = "*"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "66eed5354d1d0c4d45a4e9461d55621e26101056cf39794e7d2887a80e7924e4"
+content-hash = "3a872bc180d830448b1646174e0d4518c0504e884bd0b3a82e5be291434f6500"
 
 [metadata.files]
 appdirs = [
@@ -554,8 +554,8 @@ cycler = [
     {file = "cycler-0.10.0.tar.gz", hash = "sha256:cd7b2d1018258d7247a71425e9f26463dfb444d411c39569972f4ce586b0c9d8"},
 ]
 deepracer-utils = [
-    {file = "deepracer-utils-0.19.tar.gz", hash = "sha256:0beb004d3b426a27a648d0ed3e655ce33fd73bca1e11609f854b0ba0b1edb5af"},
-    {file = "deepracer_utils-0.19-py3-none-any.whl", hash = "sha256:2569429591f0d2ce99752a82714174fc6d04fff9d498bb3fa036953cb50021f1"},
+    {file = "deepracer-utils-0.20.tar.gz", hash = "sha256:c730fe5ae1db02eef18e3024e0d295ffe87d5b8e0e8d7abf20816d635c5d851a"},
+    {file = "deepracer_utils-0.20-py3-none-any.whl", hash = "sha256:b92ef045c1264e03449f5f6eb478a76c4d3112b0858c85ecbfcf0e625e1fb698"},
 ]
 flake8 = [
     {file = "flake8-3.8.4-py2.py3-none-any.whl", hash = "sha256:749dbbd6bfd0cf1318af27bf97a14e28e5ff548ef8e5b1566ccfb25a11e7c839"},
