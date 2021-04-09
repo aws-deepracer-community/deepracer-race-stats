@@ -4,6 +4,9 @@ import boto3
 import glob
 import shutil
 import tarfile
+import json
+from deepracer.boto3_enhancer import deepracer_client
+import uuid
 
 from datetime import datetime
 from joblib import Parallel, delayed
@@ -118,7 +121,7 @@ def leaderboard_update(ctx, output_folder):
     output_path = os.path.join(output_folder, LEADERBOARDS_CSV_FILEPATH)
 
     boto_response_to_csv(response, output_path)
-
+    # return
     asset_map = {}
     for r in response:
         asset_map.update(extract_asset_paths(r))
@@ -151,3 +154,55 @@ def leaderboard_update(ctx, output_folder):
         boto_response_to_csv(response, output_file, drop_columns=["SubmissionVideoS3path"])
 
     Parallel(n_jobs=2, prefer="threads")(delayed(update)(r["Arn"], r["Status"]) for r in response)
+
+
+@cli.command()
+@click.pass_context
+def patch_service_json(ctx):
+    SEARCH_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "service")
+    service_path = os.path.join(SEARCH_PATH, "deepracer", "2019-04-01")
+
+    with open(os.path.join(service_path, "service-2.json")) as f:
+        service_file = json.load(f)
+
+    def patch_empty(obj):
+        if obj == {}:
+            return {"shape": "S2"}
+        else:
+            if isinstance(obj, dict):
+                for key, value in obj.items():
+                    obj[key] = patch_empty(value)
+        return obj
+
+    shapes = {}
+
+    def patch(obj):
+        if isinstance(obj, dict) and "type" in obj:
+            shape = str(uuid.uuid4())
+
+            for key, value in obj.items():
+                obj[key] = patch(value)
+
+            shapes[shape] = obj
+            return {"shape": shape}
+        else:
+            if isinstance(obj, dict):
+                for key, value in obj.items():
+                    obj[key] = patch(value)
+        return obj
+
+    service_file = patch_empty(service_file)
+    service_file["operations"] = patch(service_file["operations"])
+
+    for k, v in service_file["shapes"].items():
+        if "members" in v:
+            service_file["shapes"][k]["members"] = patch(v["members"])
+
+    for key, value in shapes.items():
+        service_file["shapes"][key] = value
+
+    with open(os.path.join(service_path, "service-2.json"), "w") as f:
+        json.dump(service_file, f, indent=4)
+
+    client = deepracer_client(search_path=SEARCH_PATH)
+    response = client.list_leaderboards(MaxResults=100)

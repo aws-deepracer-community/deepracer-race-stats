@@ -1,18 +1,18 @@
 from deepracer.boto3_enhancer import deepracer_client
+import os
+
+SEARCH_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "service")
 
 
 def list_leaderboards(sortKey="CloseTime", reverseSort=False, limit=None):
-    client = deepracer_client()
+    client = deepracer_client(search_path=SEARCH_PATH)
 
     entries = []
     response = client.list_leaderboards(MaxResults=100)
     entries.extend(response["Leaderboards"])
 
     while "NextToken" in response:
-        response = client.list_leaderboards(
-            MaxResults=100,
-            NextToken=response["NextToken"],
-        )
+        response = client.list_leaderboards(MaxResults=100, NextToken=response["NextToken"])
 
         entries.extend(response["Leaderboards"])
 
@@ -26,7 +26,7 @@ def list_leaderboards(sortKey="CloseTime", reverseSort=False, limit=None):
 
 
 def list_tracks(sortKey=None, reverseSort=False, limit=None):
-    client = deepracer_client()
+    client = deepracer_client(search_path=SEARCH_PATH)
 
     entries = []
     response = client.list_tracks(MaxResults=100)
@@ -50,7 +50,7 @@ def list_tracks(sortKey=None, reverseSort=False, limit=None):
 
 
 def list_leaderboard(leaderboard_arn, sortKey="Rank", reverseSort=False, limit=None):
-    client = deepracer_client()
+    client = deepracer_client(search_path=SEARCH_PATH)
 
     entries = []
     response = client.list_leaderboard_submissions(LeaderboardArn=leaderboard_arn, MaxResults=100)
