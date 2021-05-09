@@ -60,7 +60,7 @@ def track_update(ctx, output_folder):
 
 @cli.command()
 @click.option("-o", "--output-folder", required=True)
-@click.option("-b", "--simapp-bucket", default="deepracer-managed-resources-us-east-1")
+@click.option("-b", "--simapp-bucket", default="deepracer-melodic-managed-resources-us-east-1")
 @click.option("-k", "--simapp-key", default=SIMAPP_TAR_GZ)
 @click.pass_context
 def simapp_update(ctx, output_folder, simapp_bucket, simapp_key):
