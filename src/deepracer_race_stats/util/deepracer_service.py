@@ -49,7 +49,7 @@ def list_tracks(sortKey=None, reverseSort=False, limit=None):
     return entries
 
 
-def list_leaderboard(leaderboard_arn, sortKey="Rank", reverseSort=False, limit=None):
+def list_leaderboard(leaderboard_arn, sortKeys=["Rank", "RankingScore"], reverseSort=False, limit=None):
     client = deepracer_client()
 
     entries = []
@@ -65,8 +65,12 @@ def list_leaderboard(leaderboard_arn, sortKey="Rank", reverseSort=False, limit=N
 
         entries.extend(response["LeaderboardSubmissions"])
 
-    if sortKey:
-        entries = sorted(entries, key=lambda x: x[sortKey], reverse=reverseSort)
+    for sortKey in sortKeys:
+        try:
+            entries = sorted(entries, key=lambda x: x[sortKey], reverse=reverseSort)
+            break
+        except KeyError:
+            pass
 
     if limit:
         entries = entries[:limit]
