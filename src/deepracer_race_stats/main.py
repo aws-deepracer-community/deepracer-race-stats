@@ -4,6 +4,7 @@ import boto3
 import glob
 import shutil
 import tarfile
+import subprocess
 
 from datetime import datetime
 from joblib import Parallel, delayed
@@ -60,34 +61,49 @@ def track_update(ctx, output_folder):
 
 @cli.command()
 @click.option("-o", "--output-folder", required=True)
+@click.option("-m", "--use-s3", is_flag=True, default=False)
+@click.option("-d", "--docker-image-url", default="public.ecr.aws/k1d3r4z1/deepracer-sim-public:latest")
 @click.option("-b", "--simapp-bucket", default="deepracer-melodic-managed-resources-us-east-1")
 @click.option("-k", "--simapp-key", default=SIMAPP_TAR_GZ)
 @click.pass_context
-def simapp_update(ctx, output_folder, simapp_bucket, simapp_key):
-    # Download simapp bundle.
+def simapp_update(ctx, output_folder, use_s3, docker_image_url, simapp_bucket, simapp_key):
     tmp_folder = "simapp_tmp"
-    route_prefix = "opt/install/deepracer_simulation_environment/share/deepracer_simulation_environment/routes"
 
-    if not os.path.exists(tmp_folder):
-        os.makedirs(tmp_folder)
+    if use_s3:
+        # Download simapp bundle.
+        route_prefix = "opt/install/deepracer_simulation_environment/share/deepracer_simulation_environment/routes"
 
-    s3 = boto3.resource("s3")
-    s3.Bucket(simapp_bucket).download_file(Key=simapp_key, Filename=os.path.join("simapp_tmp", SIMAPP_TAR_GZ))
+        if not os.path.exists(tmp_folder):
+            os.makedirs(tmp_folder)
 
-    # Specify subfolders to extract.
-    def subfolders(tf):
-        for m in tf.getmembers():
-            # Routes folder with the track numpy files.
+        s3 = boto3.resource("s3")
+        s3.Bucket(simapp_bucket).download_file(Key=simapp_key, Filename=os.path.join("simapp_tmp", SIMAPP_TAR_GZ))
 
-            if m.path.startswith(route_prefix):
-                yield m
+        # Specify subfolders to extract.
+        def subfolders(tf):
+            for m in tf.getmembers():
+                # Routes folder with the track numpy files.
+            
+                if m.path.startswith(route_prefix):
+                    yield m
 
-    with tarfile.open(os.path.join(tmp_folder, SIMAPP_TAR_GZ)) as f:
-        f.extractall(path=tmp_folder)
+        with tarfile.open(os.path.join(tmp_folder, SIMAPP_TAR_GZ)) as f:
+            f.extractall(path=tmp_folder)
 
-    # Extract specific parts of the simapp we want to store.
-    with tarfile.open(os.path.join(tmp_folder, "bundle.tar"), mode="r") as f:
-        f.extractall(path=tmp_folder, members=subfolders(f))
+        # Extract specific parts of the simapp we want to store.
+        with tarfile.open(os.path.join(tmp_folder, "bundle.tar"), mode="r") as f:
+            f.extractall(path=tmp_folder, members=subfolders(f))
+    else:
+        route_prefix = "opt/amazon/routes"
+        tmp_output_folder = os.path.join(tmp_folder, "opt", "amazon")
+
+        if not os.path.exists(tmp_output_folder):
+            os.makedirs(tmp_output_folder)
+
+        container_id = subprocess.check_output(f"docker create {docker_image_url}", shell=True, encoding='UTF-8').strip()
+        subprocess.check_output(f"docker cp {container_id}:/{route_prefix} {tmp_output_folder}", shell=True)
+        subprocess.check_output(f"docker rm {container_id}", shell=True)
+
 
     # Move the files we want to the raw_data folder.
     output_track_folder = os.path.join(output_folder, TRACK_FOLDER_ROUTES)
